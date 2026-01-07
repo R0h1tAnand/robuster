@@ -6,12 +6,12 @@ A high-performance alternative to [gobuster](https://github.com/OJ/gobuster), le
 
 ## Features
 
-- 🚀 **Blazingly Fast** - Async I/O with tokio, connection pooling, zero-copy optimizations
-- 🎯 **7 Modes** - dir, dns, vhost, fuzz, s3, gcs, tftp
-- 🔒 **TLS Support** - Full TLS/SSL support via rustls (no OpenSSL required)
-- 🌐 **Proxy Support** - HTTP and SOCKS5 proxy support
-- 📊 **Beautiful Output** - Colored output with progress bar
-- 📁 **File Output** - Text and JSON output formats
+- **Blazingly Fast** - Async I/O with tokio, connection pooling, zero-copy optimizations
+- **7 Modes** - dir, dns, vhost, fuzz, s3, gcs, tftp
+- **TLS Support** - Full TLS/SSL support via rustls (no OpenSSL required)
+- **Proxy Support** - HTTP and SOCKS5 proxy support
+- **Beautiful Output** - Colored output with progress bar
+- **File Output** - Text and JSON output formats
 
 ## Installation
 
