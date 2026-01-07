@@ -25,9 +25,9 @@ pub async fn run(args: FuzzArgs) -> Result<()> {
         .unwrap_or(false);
 
     if !has_fuzz_in_url && !has_fuzz_in_headers && !has_fuzz_in_data {
-        return Err(crate::error::RbusterError::ConfigError(format!(
-            "FUZZ keyword not found in URL, headers, or data"
-        )));
+        return Err(crate::error::RbusterError::ConfigError(
+            "FUZZ keyword not found in URL, headers, or data".to_string(),
+        ));
     }
 
     // Parse exclude status codes and lengths
@@ -64,7 +64,7 @@ pub async fn run(args: FuzzArgs) -> Result<()> {
     // Load wordlist
     let wordlist = load_wordlist(&args.global.wordlist)
         .await
-        .map_err(|e| crate::error::RbusterError::WordlistError(e))?;
+        .map_err(crate::error::RbusterError::WordlistError)?;
     let total = wordlist.len();
 
     // Create progress tracker
@@ -78,7 +78,7 @@ pub async fn run(args: FuzzArgs) -> Result<()> {
     let semaphore = Arc::new(Semaphore::new(args.global.threads));
     let delay = args.global.delay.map(Duration::from_millis);
 
-    let base_headers = parse_headers(&args.http.headers);
+    let _base_headers = parse_headers(&args.http.headers);
     let raw_headers = args.http.headers.clone();
     let verbose = args.global.verbose;
     let base_url = args.url.clone();

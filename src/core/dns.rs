@@ -41,7 +41,7 @@ impl DnsClient {
         let resolver = if let Some(ref resolver_addr) = config.resolver {
             // Parse custom resolver address
             let socket_addr =
-                parse_resolver_address(resolver_addr).map_err(|e| RbusterError::DnsError(e))?;
+                parse_resolver_address(resolver_addr).map_err(RbusterError::DnsError)?;
 
             let mut opts = ResolverOpts::default();
             opts.timeout = config.timeout;

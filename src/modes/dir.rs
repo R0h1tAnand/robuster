@@ -47,7 +47,7 @@ pub async fn run(args: DirArgs) -> Result<()> {
     // Load wordlist
     let wordlist = load_wordlist(&args.global.wordlist)
         .await
-        .map_err(|e| crate::error::RbusterError::WordlistError(e))?;
+        .map_err(crate::error::RbusterError::WordlistError)?;
 
     // Calculate total requests (wordlist * extensions)
     let ext_multiplier = if extensions.is_empty() {

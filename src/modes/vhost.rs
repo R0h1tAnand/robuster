@@ -41,7 +41,7 @@ pub async fn run(args: VhostArgs) -> Result<()> {
     // Load wordlist
     let wordlist = load_wordlist(&args.global.wordlist)
         .await
-        .map_err(|e| crate::error::RbusterError::WordlistError(e))?;
+        .map_err(crate::error::RbusterError::WordlistError)?;
     let total = wordlist.len();
 
     // Get base domain for appending

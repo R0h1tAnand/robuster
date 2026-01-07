@@ -86,8 +86,7 @@ impl FileWriter {
         }
         *first = false;
 
-        let json = serde_json::to_string_pretty(item)
-            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+        let json = serde_json::to_string_pretty(item).map_err(std::io::Error::other)?;
         file.write_all(json.as_bytes()).await?;
 
         Ok(())

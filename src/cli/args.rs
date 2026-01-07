@@ -307,14 +307,18 @@ impl DirArgs {
     pub fn parse_status_codes(&self) -> Vec<u16> {
         self.status_codes
             .split(',')
-            .filter_map(|s| s.trim().parse().ok())
+            .filter_map(|s| s.trim().parse::<u16>().ok())
             .collect()
     }
 
     pub fn parse_status_codes_blacklist(&self) -> Vec<u16> {
         self.status_codes_blacklist
             .as_ref()
-            .map(|s| s.split(',').filter_map(|c| c.trim().parse().ok()).collect())
+            .map(|s| {
+                s.split(',')
+                    .filter_map(|c| c.trim().parse::<u16>().ok())
+                    .collect()
+            })
             .unwrap_or_default()
     }
 

@@ -27,7 +27,7 @@ pub async fn run(args: GcsArgs) -> Result<()> {
     // Load wordlist
     let wordlist = load_wordlist(&args.global.wordlist)
         .await
-        .map_err(|e| crate::error::RbusterError::WordlistError(e))?;
+        .map_err(crate::error::RbusterError::WordlistError)?;
     let total = wordlist.len();
 
     // Create progress tracker

@@ -12,6 +12,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::Semaphore;
 
+#[allow(dead_code)]
 const S3_REGIONS: &[&str] = &[
     "us-east-1",
     "us-east-2",
@@ -41,7 +42,7 @@ pub async fn run(args: S3Args) -> Result<()> {
     // Load wordlist
     let wordlist = load_wordlist(&args.global.wordlist)
         .await
-        .map_err(|e| crate::error::RbusterError::WordlistError(e))?;
+        .map_err(crate::error::RbusterError::WordlistError)?;
     let total = wordlist.len();
 
     // Create progress tracker

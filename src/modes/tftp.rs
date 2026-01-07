@@ -33,7 +33,7 @@ pub async fn run(args: TftpArgs) -> Result<()> {
     // Load wordlist
     let wordlist = load_wordlist(&args.global.wordlist)
         .await
-        .map_err(|e| crate::error::RbusterError::WordlistError(e))?;
+        .map_err(crate::error::RbusterError::WordlistError)?;
     let total = wordlist.len();
 
     // Create progress tracker
@@ -56,7 +56,6 @@ pub async fn run(args: TftpArgs) -> Result<()> {
             let semaphore = Arc::clone(&semaphore);
             let progress = progress.clone();
             let output = Arc::clone(&output);
-            let server_addr = server_addr;
 
             async move {
                 let _permit = semaphore.acquire().await.unwrap();
