@@ -1,28 +1,121 @@
-name: Create Release
+name: Release
 
 on:
   push:
     tags:
-      - 'v*'
+      - 'v*.*.*'
+
+permissions:
+  contents: write
 
 jobs:
+  build-and-release:
+    name: Build and Release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact_name: robuster
+            asset_name: robuster-linux-x86_64
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact_name: robuster.exe
+            asset_name: robuster-windows-x86_64.exe
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo index
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache target directory
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: ${{ runner.os }}-target-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build release binary
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Upload binary as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset_name }}
+          path: target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
+
   create-release:
     name: Create Release
+    needs: build-and-release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      
-      - uses: dtolnay/rust-toolchain@stable
-      
-      - uses: Swatinem/rust-cache@v2
-      
-      - name: Build
-        run: cargo build --release
-      
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
         with:
-          files: target/release/rbuster*
+          path: artifacts
+
+      - name: Display structure of downloaded files
+        run: ls -R artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: robuster ${{ github.ref_name }}
+          body: |
+            ## robuster ${{ github.ref_name }}
+            
+            🔥 Blazingly fast directory/DNS/vhost buster written in Rust
+            
+            ### Features
+            - ⚡ **Blazingly Fast** - Async I/O with tokio, connection pooling, zero-copy optimizations
+            - 🎯 **7 Modes** - dir, dns, vhost, fuzz, s3, gcs, tftp
+            - 🔒 **TLS Support** - Full TLS/SSL support via rustls (no OpenSSL required)
+            - 🌐 **Proxy Support** - HTTP and SOCKS5 proxy support
+            
+            ### Installation
+            
+            #### Linux (x86_64)
+            ```bash
+            wget https://github.com/R0h1tAnand/robuster/releases/download/${{ github.ref_name }}/robuster-linux-x86_64
+            chmod +x robuster-linux-x86_64
+            sudo mv robuster-linux-x86_64 /usr/local/bin/robuster
+            ```
+            
+            #### Windows (x86_64)
+            Download `robuster-windows-x86_64.exe` and add it to your PATH.
+            
+            ### Usage
+            ```bash
+            robuster --help
+            ```
+            
+            ### Checksums
+            See the assets section below for SHA256 checksums.
+            
+            ---
+            **Full Changelog**: https://github.com/R0h1tAnand/robuster/commits/${{ github.ref_name }}
+          files: |
+            artifacts/robuster-linux-x86_64/robuster
+            artifacts/robuster-windows-x86_64.exe/robuster.exe
           draft: false
           prerelease: false
         env:
