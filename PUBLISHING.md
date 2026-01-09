@@ -1,8 +1,28 @@
 # Publishing robuster to crates.io
 
-This guide explains how to use the automated CI/CD pipeline to build, release, and publish robuster.
+This guide explains how to use the **automated CI/CD pipeline** to build, release, and publish robuster.
 
-## Setup Steps
+## 🚀 Quick Start (Automated)
+
+**No manual steps needed!** Just update the version and push:
+
+```bash
+# 1. Edit Cargo.toml and change the version
+# version = "1.0.1"  # <-- Update this
+
+# 2. Commit and push
+git add Cargo.toml
+git commit -m "chore: bump version to 1.0.1"
+git push origin main
+
+# 3. Done! The workflow handles everything:
+# ✅ Runs tests
+# ✅ Builds binaries
+# ✅ Creates GitHub release
+# ✅ Publishes to crates.io
+```
+
+## Setup Steps (One-Time)
 
 ### 1. Get Crates.io API Token
 - Go to https://crates.io and create an account (or sign in)
@@ -26,7 +46,42 @@ Your Cargo.toml has all required fields:
 - `license = "MIT"`
 - `repository = "https://github.com/R0h1tAnand/robuster"`
 
-## Workflow
+## How It Works
+
+### Automated Workflow
+
+The `auto-release.yml` workflow triggers on every push to `main` that changes:
+- `Cargo.toml`
+- Any file in `src/`
+
+**Process:**
+1. 📦 Extracts version from `Cargo.toml`
+2. 🔍 Checks if tag already exists (prevents duplicates)
+3. ✅ Runs full test suite (if new version)
+4. 🔨 Builds Linux & Windows binaries
+5. 🏷️ Creates git tag automatically
+6. 📦 Creates GitHub release
+7. 🚀 Publishes to crates.io
+
+**Smart Detection:** The workflow only creates a release if the version in `Cargo.toml` doesn't already exist as a git tag.
+
+## Workflow Flow Chart
+
+```
+Push to main → Check Cargo.toml version → Tag exists?
+                                              ↓ No
+                                         Run Tests
+                                              ↓
+                                        Build Binaries
+                                              ↓
+                                         Create Tag
+                                              ↓
+                                       Create Release
+                                              ↓
+                                      Publish to crates.io
+```
+
+## Previous Manual Workflow (Legacy)
 
 ### Step 1: Develop and Test Locally
 ```bash

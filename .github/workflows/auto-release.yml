@@ -1,0 +1,213 @@
+name: Auto Release & Publish
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Cargo.toml'
+      - 'src/**'
+      - '.github/workflows/auto-release.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    name: Check Version and Run Tests
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag_exists: ${{ steps.check_tag.outputs.exists }}
+      should_release: ${{ steps.should_release.outputs.release }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from Cargo.toml
+        id: version
+        run: |
+          VERSION=$(grep -m1 '^version = ' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Detected version: $VERSION"
+
+      - name: Check if tag exists
+        id: check_tag
+        run: |
+          git fetch --tags
+          if git rev-parse "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "⚠️ Tag v${{ steps.version.outputs.version }} already exists"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "✨ Tag v${{ steps.version.outputs.version }} does not exist - will create new release"
+          fi
+
+      - name: Determine if should release
+        id: should_release
+        run: |
+          if [ "${{ steps.check_tag.outputs.exists }}" == "false" ]; then
+            echo "release=true" >> $GITHUB_OUTPUT
+            echo "🚀 Will create new release"
+          else
+            echo "release=false" >> $GITHUB_OUTPUT
+            echo "⏭️ Skipping release - version already exists"
+          fi
+
+      - name: Setup Rust
+        if: steps.should_release.outputs.release == 'true'
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache dependencies
+        if: steps.should_release.outputs.release == 'true'
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run tests
+        if: steps.should_release.outputs.release == 'true'
+        run: cargo test --verbose
+
+      - name: Check formatting
+        if: steps.should_release.outputs.release == 'true'
+        run: cargo fmt -- --check
+
+      - name: Run clippy
+        if: steps.should_release.outputs.release == 'true'
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+  build:
+    name: Build - ${{ matrix.os }}
+    needs: check
+    if: needs.check.outputs.should_release == 'true'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact_name: robuster
+            asset_name: robuster-linux-x86_64
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact_name: robuster.exe
+            asset_name: robuster-windows-x86_64.exe
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build release binary
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Upload binary as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset_name }}
+          path: target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
+
+  release:
+    name: Create GitHub Release
+    needs: [check, build]
+    if: needs.check.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Display structure of downloaded files
+        run: ls -R artifacts
+
+      - name: Create and push tag
+        env:
+          VERSION: ${{ needs.check.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "v$VERSION" -m "Release v$VERSION"
+          git push origin "v$VERSION"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.check.outputs.version }}
+          name: robuster v${{ needs.check.outputs.version }}
+          body: |
+            ## robuster v${{ needs.check.outputs.version }}
+            
+            🔥 Blazingly fast directory/DNS/vhost buster written in Rust
+            
+            ### What's New
+            - Auto-released from version in Cargo.toml
+            - Built and tested automatically
+            
+            ### Features
+            - ⚡ **Blazingly Fast** - Async I/O with tokio, connection pooling, zero-copy optimizations
+            - 🎯 **7 Modes** - dir, dns, vhost, fuzz, s3, gcs, tftp
+            - 🔒 **TLS Support** - Full TLS/SSL support via rustls (no OpenSSL required)
+            - 🌐 **Proxy Support** - HTTP and SOCKS5 proxy support
+            
+            ### Installation
+            
+            #### Linux (x86_64)
+            ```bash
+            wget https://github.com/R0h1tAnand/robuster/releases/download/v${{ needs.check.outputs.version }}/robuster-linux-x86_64
+            chmod +x robuster-linux-x86_64
+            sudo mv robuster-linux-x86_64 /usr/local/bin/robuster
+            ```
+            
+            #### Windows (x86_64)
+            Download `robuster-windows-x86_64.exe` and add it to your PATH.
+            
+            ### Usage
+            ```bash
+            robuster --help
+            ```
+            
+            ---
+            **Full Changelog**: https://github.com/R0h1tAnand/robuster/compare/v1.0.0...v${{ needs.check.outputs.version }}
+          files: |
+            artifacts/robuster-linux-x86_64/robuster
+            artifacts/robuster-windows-x86_64.exe/robuster.exe
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish:
+    name: Publish to crates.io
+    needs: [check, release]
+    if: needs.check.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+      
+      - name: Publish to crates.io
+        run: cargo publish --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        continue-on-error: true  # Don't fail if already published
