@@ -70,6 +70,16 @@ impl ProgressTracker {
             .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     }
 
+    /// Print a line above the progress bar without disrupting its position.
+    /// Uses `bar.println()` so indicatif handles cursor management correctly.
+    pub fn println(&self, line: &str) {
+        if let Some(ref bar) = self.bar {
+            bar.println(line);
+        } else {
+            println!("{}", line);
+        }
+    }
+
     pub fn finish(&self) {
         if let Some(ref bar) = self.bar {
             bar.finish_with_message("done");

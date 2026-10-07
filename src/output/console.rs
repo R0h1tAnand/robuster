@@ -3,8 +3,8 @@
 use colored::*;
 use std::net::IpAddr;
 
-/// Print a found result for directory mode
-pub fn print_dir_result(
+/// Format a found result for directory mode
+pub fn format_dir_result(
     path: &str,
     status: u16,
     size: usize,
@@ -12,7 +12,7 @@ pub fn print_dir_result(
     show_length: bool,
     expanded: bool,
     base_url: &str,
-) {
+) -> String {
     let status_colored = match status {
         200..=299 => status.to_string().bright_green(),
         300..=399 => status.to_string().bright_yellow(),
@@ -40,17 +40,17 @@ pub fn print_dir_result(
         line.push_str(&format!(" [--> {}]", loc.bright_magenta()));
     }
 
-    println!("{}", line);
+    line
 }
 
-/// Print a found result for DNS mode
-pub fn print_dns_result(
+/// Format a found result for DNS mode
+pub fn format_dns_result(
     subdomain: &str,
     ips: &[IpAddr],
     cnames: &[String],
     show_ips: bool,
     show_cname: bool,
-) {
+) -> String {
     let mut line = format!("{}", subdomain.bright_green());
 
     if show_ips && !ips.is_empty() {
@@ -67,11 +67,11 @@ pub fn print_dns_result(
         line.push_str(&format!(" [CNAME: {}]", cname_str.bright_yellow()));
     }
 
-    println!("{}", line);
+    line
 }
 
-/// Print a found result for vhost mode
-pub fn print_vhost_result(host: &str, status: u16, size: usize) {
+/// Format a found result for vhost mode
+pub fn format_vhost_result(host: &str, status: u16, size: usize) -> String {
     let status_colored = match status {
         200..=299 => status.to_string().bright_green(),
         300..=399 => status.to_string().bright_yellow(),
@@ -79,16 +79,22 @@ pub fn print_vhost_result(host: &str, status: u16, size: usize) {
         _ => status.to_string().white(),
     };
 
-    println!(
+    format!(
         "Found: {} (Status: {}) [Size: {}]",
         host.bright_green(),
         status_colored,
         size.to_string().bright_cyan()
-    );
+    )
 }
 
-/// Print a found result for fuzz mode
-pub fn print_fuzz_result(payload: &str, status: u16, size: usize, words: usize, lines: usize) {
+/// Format a found result for fuzz mode
+pub fn format_fuzz_result(
+    payload: &str,
+    status: u16,
+    size: usize,
+    words: usize,
+    lines: usize,
+) -> String {
     let status_colored = match status {
         200..=299 => status.to_string().bright_green(),
         300..=399 => status.to_string().bright_yellow(),
@@ -96,18 +102,18 @@ pub fn print_fuzz_result(payload: &str, status: u16, size: usize, words: usize, 
         _ => status.to_string().white(),
     };
 
-    println!(
+    format!(
         "{:<30} [Status: {}, Size: {}, Words: {}, Lines: {}]",
         payload.bright_white(),
         status_colored,
         size.to_string().bright_cyan(),
         words,
         lines
-    );
+    )
 }
 
-/// Print S3/GCS bucket result
-pub fn print_bucket_result(bucket: &str, status: &str, files: &[String]) {
+/// Format S3/GCS bucket result
+pub fn format_bucket_result(bucket: &str, status: &str, files: &[String]) -> String {
     let status_colored = match status {
         "public" => status.bright_green(),
         "private" => status.bright_yellow(),
@@ -115,21 +121,22 @@ pub fn print_bucket_result(bucket: &str, status: &str, files: &[String]) {
         _ => status.white(),
     };
 
-    println!("{} [{}]", bucket.bright_white(), status_colored);
-
+    let mut out = format!("{} [{}]", bucket.bright_white(), status_colored);
     for file in files.iter().take(5) {
-        println!("  └── {}", file.bright_cyan());
+        out.push('\n');
+        out.push_str(&format!("  └── {}", file.bright_cyan()));
     }
+    out
 }
 
-/// Print error message
+/// Print error message (goes to stderr, not affected by progress bar)
 pub fn print_error(msg: &str, verbose: bool) {
     if verbose {
         eprintln!("{} {}", "[ERROR]".bright_red(), msg);
     }
 }
 
-/// Print warning message
+/// Print warning message (goes to stderr, not affected by progress bar)
 pub fn print_warning(msg: &str) {
     eprintln!("{} {}", "[WARN]".bright_yellow(), msg);
 }
