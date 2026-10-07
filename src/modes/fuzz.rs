@@ -3,7 +3,7 @@
 use crate::cli::FuzzArgs;
 use crate::core::{load_wordlist, parse_headers};
 use crate::error::Result;
-use crate::output::{print_error, print_fuzz_result, FuzzResult, OutputHandler, ProgressTracker};
+use crate::output::{format_fuzz_result, print_error, FuzzResult, OutputHandler, ProgressTracker};
 use futures::stream::{self, StreamExt};
 use reqwest::{ClientBuilder, Method};
 use std::collections::HashSet;
@@ -168,8 +168,8 @@ pub async fn run(args: FuzzArgs) -> Result<()> {
                         if should_show {
                             progress.inc_found();
 
-                            // Print to console
-                            print_fuzz_result(&payload, status, size, words, lines);
+                            // Print via progress bar to keep it static
+                            progress.println(&format_fuzz_result(&payload, status, size, words, lines));
 
                             // Write to file if configured
                             if let Some(writer) = output.file_writer() {

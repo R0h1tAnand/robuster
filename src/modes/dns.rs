@@ -4,7 +4,7 @@ use crate::cli::DnsArgs;
 use crate::core::{load_wordlist, DnsClient, DnsConfig};
 use crate::error::Result;
 use crate::output::{
-    print_dns_result, print_error, print_warning, DnsResultJson, OutputHandler, ProgressTracker,
+    format_dns_result, print_error, print_warning, DnsResultJson, OutputHandler, ProgressTracker,
 };
 use futures::stream::{self, StreamExt};
 use std::collections::HashSet;
@@ -98,14 +98,14 @@ pub async fn run(args: DnsArgs) -> Result<()> {
                         if !is_wildcard {
                             progress.inc_found();
 
-                            // Print to console
-                            print_dns_result(
+                            // Print via progress bar to keep it static
+                            progress.println(&format_dns_result(
                                 &subdomain,
                                 &dns_result.ips,
                                 &dns_result.cnames,
                                 show_ips,
                                 show_cname,
-                            );
+                            ));
 
                             // Write to file if configured
                             if let Some(writer) = output.file_writer() {

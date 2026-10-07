@@ -4,7 +4,7 @@ use crate::cli::GcsArgs;
 use crate::core::load_wordlist;
 use crate::error::Result;
 use crate::output::{
-    print_bucket_result, print_error, BucketResult, OutputHandler, ProgressTracker,
+    format_bucket_result, print_error, BucketResult, OutputHandler, ProgressTracker,
 };
 use futures::stream::{self, StreamExt};
 use reqwest::{Client, ClientBuilder, StatusCode};
@@ -67,7 +67,7 @@ pub async fn run(args: GcsArgs) -> Result<()> {
                     Ok(Some((status, files))) => {
                         progress.inc_found();
 
-                        print_bucket_result(&bucket_name, &status, &files);
+                        progress.println(&format_bucket_result(&bucket_name, &status, &files));
 
                         // Write to file if configured
                         if let Some(writer) = output.file_writer() {

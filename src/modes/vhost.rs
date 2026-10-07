@@ -3,7 +3,7 @@
 use crate::cli::VhostArgs;
 use crate::core::{load_wordlist, parse_headers};
 use crate::error::Result;
-use crate::output::{print_error, print_vhost_result, OutputHandler, ProgressTracker, VhostResult};
+use crate::output::{format_vhost_result, print_error, OutputHandler, ProgressTracker, VhostResult};
 use futures::stream::{self, StreamExt};
 use reqwest::ClientBuilder;
 use std::collections::HashSet;
@@ -124,8 +124,8 @@ pub async fn run(args: VhostArgs) -> Result<()> {
                         if should_show {
                             progress.inc_found();
 
-                            // Print to console
-                            print_vhost_result(&host, status, size);
+                            // Print via progress bar to keep it static
+                            progress.println(&format_vhost_result(&host, status, size));
 
                             // Write to file if configured
                             if let Some(writer) = output.file_writer() {

@@ -4,7 +4,7 @@ use crate::cli::DirArgs;
 use crate::core::{load_wordlist, parse_headers, HttpClient, HttpConfig};
 use crate::error::Result;
 use crate::output::{
-    print_dir_result, print_error, print_warning, DirResult, OutputHandler, ProgressTracker,
+    format_dir_result, print_error, print_warning, DirResult, OutputHandler, ProgressTracker,
 };
 use futures::stream::{self, StreamExt};
 use std::sync::Arc;
@@ -156,8 +156,8 @@ pub async fn run(args: DirArgs) -> Result<()> {
                             // Extract path from URL
                             let path = url.strip_prefix(&base_url).unwrap_or(&url);
 
-                            // Print to console
-                            print_dir_result(
+                            // Print via progress bar to keep it static
+                            progress.println(&format_dir_result(
                                 path,
                                 status,
                                 size,
@@ -165,7 +165,7 @@ pub async fn run(args: DirArgs) -> Result<()> {
                                 show_length,
                                 expanded,
                                 &base_url,
-                            );
+                            ));
 
                             // Write to file if configured
                             if let Some(writer) = output.file_writer() {
@@ -219,7 +219,7 @@ pub async fn run(args: DirArgs) -> Result<()> {
                 {
                     if valid_status_codes.contains(&status) {
                         let path = backup_url.strip_prefix(&base_url).unwrap_or(&backup_url);
-                        print_dir_result(
+                        progress.println(&format_dir_result(
                             path,
                             status,
                             size,
@@ -227,7 +227,7 @@ pub async fn run(args: DirArgs) -> Result<()> {
                             show_length,
                             expanded,
                             &base_url,
-                        );
+                        ));
                     }
                 }
             }
