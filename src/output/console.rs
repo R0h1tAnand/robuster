@@ -88,7 +88,13 @@ pub fn format_vhost_result(host: &str, status: u16, size: usize) -> String {
 }
 
 /// Format a found result for fuzz mode
-pub fn format_fuzz_result(payload: &str, status: u16, size: usize, words: usize, lines: usize) -> String {
+pub fn format_fuzz_result(
+    payload: &str,
+    status: u16,
+    size: usize,
+    words: usize,
+    lines: usize,
+) -> String {
     let status_colored = match status {
         200..=299 => status.to_string().bright_green(),
         300..=399 => status.to_string().bright_yellow(),

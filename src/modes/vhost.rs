@@ -3,7 +3,9 @@
 use crate::cli::VhostArgs;
 use crate::core::{load_wordlist, parse_headers};
 use crate::error::Result;
-use crate::output::{format_vhost_result, print_error, OutputHandler, ProgressTracker, VhostResult};
+use crate::output::{
+    format_vhost_result, print_error, OutputHandler, ProgressTracker, VhostResult,
+};
 use futures::stream::{self, StreamExt};
 use reqwest::ClientBuilder;
 use std::collections::HashSet;

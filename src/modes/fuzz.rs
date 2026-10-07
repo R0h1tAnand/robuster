@@ -169,7 +169,8 @@ pub async fn run(args: FuzzArgs) -> Result<()> {
                             progress.inc_found();
 
                             // Print via progress bar to keep it static
-                            progress.println(&format_fuzz_result(&payload, status, size, words, lines));
+                            progress
+                                .println(&format_fuzz_result(&payload, status, size, words, lines));
 
                             // Write to file if configured
                             if let Some(writer) = output.file_writer() {
