@@ -1,6 +1,6 @@
 [package]
 name = "robuster"
-version = "1.0.2"
+version = "1.0.3"
 edition = "2021"
 authors = ["R0h1tAnand"]
 description = "Blazingly fast directory/DNS/vhost buster written in Rust"
